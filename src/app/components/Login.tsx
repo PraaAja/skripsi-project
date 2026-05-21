@@ -5,7 +5,7 @@ import {
   Lock,
   Eye,
   EyeOff,
-  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
@@ -87,61 +87,68 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* LEFT IMAGE */}
-      <div className="hidden lg:block lg:w-1/2 relative">
+    <div className="min-h-screen flex selection:bg-blue-200 selection:text-blue-900">
+      {/* LEFT SECTION (IMAGE) */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden group">
         <ImageWithFallback
           src="https://images.unsplash.com/photo-1771408427146-09be9a1d4535"
           alt="Education"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-blue-900 bg-opacity-40"></div>
+        {/* Gradient Overlay biar lebih premium */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/95 via-blue-900/80 to-blue-800/40 backdrop-blur-[2px]"></div>
         <div className="absolute inset-0 flex items-center justify-center text-white p-12">
-          <div className="text-center">
-            <GraduationCap className="w-24 h-24 mx-auto mb-6" />
-            <h2 className="text-4xl font-bold mb-4">
-              Portal Sistem Rekomendasi Jurusan SMAN 3 TUBAN
+          <div className="text-center transform transition-all duration-700 hover:-translate-y-2">
+            <div className="inline-block p-4 bg-white/10 rounded-full backdrop-blur-md mb-6 border border-white/20 shadow-2xl">
+              <GraduationCap className="w-20 h-20 text-blue-100" />
+            </div>
+            <h2 className="text-4xl font-extrabold mb-4 leading-tight tracking-tight">
+              Portal Sistem Rekomendasi <br /> Jurusan SMAN 3 TUBAN
             </h2>
-            <p className="text-xl">
-              Akses informasi akademik dan layanan sekolah Anda
+            <p className="text-lg text-blue-100/90 font-light max-w-lg mx-auto">
+              Sistem cerdas rekomendasi jurusan siswa  menggunakan metode Decision Tree.
             </p>
           </div>
         </div>
       </div>
 
-      {/* RIGHT FORM */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
-        <div className="w-full max-w-md">
-          {/* BACK */}
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-8"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Kembali ke Beranda
-          </button>
+      {/* RIGHT SECTION (FORM) */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-slate-50 relative overflow-hidden">
+        
+        {/* BACKGROUND ANIMATIONS (Nilai Plus Wkwk) */}
+        <div className="absolute top-0 right-0 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
 
-          {/* CARD */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <div className="w-full max-w-md relative z-10">
+          
+          {/* HEADER MOVED OUTSIDE THE CARD */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-lg border border-slate-100 mb-5 text-blue-600 animate-bounce" style={{ animationDuration: '3s' }}>
+              <GraduationCap className="w-8 h-8" />
+            </div>
+            <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">
               Selamat Datang
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-slate-500 font-medium">
               Silakan masuk ke akun Anda
             </p>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+          {/* CARD FORM */}
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/60 p-8 transition-all duration-300 hover:shadow-2xl">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              
               {/* EMAIL */}
               <div>
-                <label className="block text-gray-700 mb-2">
-                  Email
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Alamat Email
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                   <input
                     type="email"
-                    className="w-full pl-10 pr-4 py-3 border rounded-lg"
-                    placeholder="Masukkan email"
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300"
+                    placeholder="contoh@email.com"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     required
@@ -151,14 +158,14 @@ export function Login() {
 
               {/* PASSWORD */}
               <div>
-                <label className="block text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                   <input
                     type={showPassword ? "text" : "password"}
-                    className="w-full pl-10 pr-12 py-3 border rounded-lg"
+                    className="w-full pl-12 pr-12 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300"
                     placeholder="Masukkan password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -167,34 +174,49 @@ export function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
                   >
-                    {showPassword ? <EyeOff /> : <Eye />}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
-              {/* FORGOT */}
-              <div className="flex justify-end">
+              {/* FORGOT PASSWORD */}
+              <div className="flex justify-end pt-1">
                 <button
-  type="button"
-  onClick={() => navigate("/forgot-password")}
-  className="text-sm text-blue-600 hover:text-blue-700"
->
-  Lupa password?
-</button>
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Lupa password?
+                </button>
               </div>
 
-              {/* SUBMIT */}
+              {/* SUBMIT BUTTON */}
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-3 rounded-lg"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transform hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
                 disabled={isLoading}
               >
-                {isLoading ? "Loading..." : "Masuk"}
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    Masuk Sekarang
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </form>
           </div>
+          
+          {/* FOOTER TEXT (Optional) */}
+          <p className="text-center text-slate-400 text-xs mt-8">
+            © {new Date().getFullYear()} SMAN 3 TUBAN. All rights reserved.
+          </p>
         </div>
       </div>
     </div>

@@ -1,6 +1,4 @@
-import { createBrowserRouter } from "react-router";
-import { Root } from './Root';
-import { Home } from './components/Home';
+import { createBrowserRouter, Navigate } from "react-router";
 import { Login } from './components/Login';
 import { NotFound } from './components/NotFound';
 import ForgotPassword from "./components/ForgotPassword";
@@ -34,9 +32,9 @@ import { SistemRekomendasiJurusan } from './components/shared/SistemRekomendasiJ
 export const router = createBrowserRouter([
   {
     path: '/',
-    Component: Root,
+    // Component: Root udah dihapus dari sini, jadi langsung ke children-nya
     children: [
-      { index: true, Component: Home },
+      { index: true, element: <Navigate to="/login" replace /> },
       { path: 'login', Component: Login },
       { path: 'forgot-password', Component: ForgotPassword },
       { path: 'reset-password/:token', Component: ResetPassword },
