@@ -154,86 +154,150 @@ if (kelas) {
 });
 
 router.get("/rekomendasi", (req, res) => {
-  db.query(
-    "SELECT id, nama FROM users WHERE TRIM(LOWER(role)) = 'siswa'",
-    (err, results) => {
-      if (err) {
-        console.error("ERROR:", err);
-        return res.status(500).json({ message: err.message });
-      }
+  const query = `
+    SELECT 
+      s.id,
+      u.nama,
+      s.jurusan,
+      s.confidence,
+      s.alasan
+    FROM siswa s
+    JOIN users u ON u.id = s.user_id
+    WHERE s.jurusan IS NOT NULL
+    ORDER BY s.id DESC
+  `;
 
-      // 🔥 dummy rekomendasi
-      const data = results.map((siswa) => ({
-        id: siswa.id,
-        nama: siswa.nama,
-        jurusan: "IPA",
-        confidence: 85,
-        alasan: "Nilai IPA lebih tinggi dari IPS",
-      }));
-
-      res.json(data);
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("ERROR REKOMENDASI GURU:", err);
+      return res.status(500).json({ message: err.message });
     }
-  );
+
+    const data = results.map((row) => ({
+      id: row.id,
+      nama: row.nama,
+      jurusan: row.jurusan,
+      confidence: row.confidence,
+      alasan: row.alasan ? JSON.parse(row.alasan) : [],
+    }));
+
+    res.json(data);
+  });
 });
-// 🔥 PROSES OTOMATIS REKOMENDASI
+
+// 🔥 PROSES OTOMATIS REKOMENDASI DENGAN ALGORITMA C4.5
 router.post("/proses/:id", (req, res) => {
   const { id } = req.params;
 
-  const getSiswa = `
-    SELECT * FROM siswa WHERE id = ?
-  `;
+  // 1. Ambil data nilai siswa dari student_scores
+  const getSiswaScore = "SELECT * FROM student_scores WHERE id = ? LIMIT 1";
 
-  db.query(getSiswa, [id], (err, rows) => {
-    if (err) return res.status(500).json({ message: err.message });
-
-    if (rows.length === 0) {
-      return res.status(404).json({ message: "Siswa tidak ditemukan" });
+  db.query(getSiswaScore, [id], (err, rows) => {
+    if (err) {
+      console.error("DB ERROR SELECT SCORE:", err);
+      return res.status(500).json({ message: "Gagal memproses rekomendasi" });
     }
 
-    const s = rows[0];
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Siswa tidak ditemukan di data nilai" });
+    }
 
-    // 🔥 MAPPING 14 → 4 NILAI
-    const matematika = (s.matematika_umum + s.matematika_lanjutan) / 2;
+    const student = rows[0];
 
-    const ipa = (s.fisika + s.kimia + s.biologi) / 3;
+    // Persiapkan 11 nilai mata pelajaran untuk diinput ke model C4.5
+    const studentScores = {
+      pai: Number(student.pai) || 0,
+      ppkn: Number(student.ppkn) || 0,
+      bahasa_indonesia: Number(student.bahasa_indonesia) || 0,
+      bahasa_inggris: Number(student.bahasa_inggris) || 0,
+      matematika_umum: Number(student.matematika_umum) || 0,
+      ipa: Number(student.ipa) || 0,
+      ips: Number(student.ips) || 0,
+      bahasa_daerah: Number(student.bahasa_daerah) || 0,
+      pjok: Number(student.pjok) || 0,
+      seni: Number(student.seni) || 0,
+      informatika: Number(student.informatika) || 0,
+    };
 
-    const ips = (s.sejarah + s.ppkn) / 2;
+    // Fungsi pembantu untuk menyimpan klasifikasi
+    const runClassificationAndSave = (userId) => {
+      // 2. Ambil data training
+      const trainingQuery = "SELECT * FROM training_data WHERE jurusan IS NOT NULL";
 
-    const bahasa =
-      (s.bahasa_indonesia + s.bahasa_inggris + s.bahasa_daerah) / 3;
+      db.query(trainingQuery, (err2, trainingData) => {
+        if (err2) {
+          console.error("DB ERROR SELECT TRAINING:", err2);
+          return res.status(500).json({ message: "Gagal mengambil data training" });
+        }
 
-    // 🔥 MASUK AI
-    const hasil = classifyStudent({
-      matematika,
-      ipa,
-      ips,
-      bahasa,
-    });
+        // 3. Masuk ke algoritma C4.5
+        const hasil = classifyStudent(studentScores, trainingData);
 
-    // 🔥 SIMPAN HASIL
-    const updateQuery = `
-      UPDATE siswa 
-      SET 
-        jurusan = ?, 
-        confidence = ?, 
-        alasan = ?, 
-        status = 'Sudah Diproses'
-      WHERE id = ?
-    `;
+        // 4. Simpan ke database siswa menggunakan INSERT ... ON DUPLICATE KEY UPDATE
+        const saveQuery = `
+          INSERT INTO siswa 
+            (user_id, nama, kelas, jurusan, confidence, status, alasan, entropy, information_gain) 
+          VALUES 
+            (?, ?, ?, ?, ?, 'Sudah Diproses', ?, ?, ?)
+          ON DUPLICATE KEY UPDATE 
+            nama = VALUES(nama),
+            kelas = VALUES(kelas),
+            jurusan = VALUES(jurusan),
+            confidence = VALUES(confidence),
+            status = VALUES(status),
+            alasan = VALUES(alasan),
+            entropy = VALUES(entropy),
+            information_gain = VALUES(information_gain)
+        `;
 
-    db.query(
-      updateQuery,
-      [hasil.jurusan, hasil.confidence, hasil.alasan, id],
-      (err2) => {
-        if (err2)
-          return res.status(500).json({ message: err2.message });
+        db.query(
+          saveQuery,
+          [
+            userId,
+            student.nama,
+            student.kelas,
+            hasil.jurusan,
+            hasil.confidence,
+            JSON.stringify(hasil.alasan),
+            hasil.entropy,
+            hasil.information_gain
+          ],
+          (err3) => {
+            if (err3) {
+              console.error("DB ERROR SAVE SISWA:", err3);
+              return res.status(500).json({ message: "Gagal menyimpan hasil klasifikasi" });
+            }
 
-        res.json({
-          message: "Berhasil diproses",
-          hasil,
-        });
-      }
-    );
+            res.json({
+              message: "Siswa berhasil diproses rekomendasi secara otomatis",
+              hasil,
+            });
+          }
+        );
+      });
+    };
+
+    // 5. Cek/Verifikasi user_id siswa
+    if (student.user_id) {
+      runClassificationAndSave(student.user_id);
+    } else {
+      // Jika user_id kosong, coba cari berdasarkan nama
+      const getUserQuery = "SELECT id FROM users WHERE LOWER(TRIM(nama)) = LOWER(TRIM(?)) LIMIT 1";
+      db.query(getUserQuery, [student.nama], (errUser, userResult) => {
+        if (errUser) {
+          console.error("DB ERROR SELECT USER:", errUser);
+          return res.status(500).json({ message: "Gagal memverifikasi akun siswa" });
+        }
+
+        const userId = userResult.length > 0 ? userResult[0].id : null;
+        if (!userId) {
+          return res.status(404).json({ message: "Siswa belum memiliki akun pengguna di sistem" });
+        }
+
+        runClassificationAndSave(userId);
+      });
+    }
   });
 });
+
 module.exports = router;

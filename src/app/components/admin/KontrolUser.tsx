@@ -214,8 +214,13 @@ export function KontrolUser() {
                   <label className="block text-sm font-bold text-gray-700 mb-2">Kelas</label>
                   <select value={form.kelas} onChange={(e) => setForm({ ...form, kelas: e.target.value })} className="w-full border border-gray-300 bg-gray-50 p-3 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
                     <option value="">Pilih Kelas</option>
-                    <option value="10A">10-A</option>
-                    <option value="10B">10-B</option>
+                    <option value="X-A">X-A</option>
+                    <option value="X-B">X-B</option>
+                    <option value="X-C">X-C</option>
+                    <option value="X-D">X-D</option>
+                    <option value="X-E">X-E</option>
+                    <option value="X-F">X-F</option>
+                    <option value="X-G">X-G</option>
                   </select>
                 </div>
 

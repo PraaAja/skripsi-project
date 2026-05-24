@@ -6,7 +6,7 @@ async function createUsers() {
 
   const users = [
     {
-      name: "Admin",
+      nama: "Admin",
       email: "admin@gmail.com",
       role: "admin",
       nis: null,
@@ -14,7 +14,7 @@ async function createUsers() {
       kelas: null
     },
     {
-      name: "Pak Budi",
+      nama: "Pak Budi",
       email: "guru@gmail.com",
       role: "guru",
       nis: null,
@@ -22,7 +22,7 @@ async function createUsers() {
       kelas: null
     },
     {
-      name: "Ahmad Rizki",
+      nama: "Ahmad Rizki",
       email: "siswa@gmail.com",
       role: "siswa",
       nis: "12345",
@@ -33,7 +33,7 @@ async function createUsers() {
 
   users.forEach((user) => {
     const sql = `
-      INSERT INTO users (name, email, password, role, nis, nip, kelas) 
+      INSERT INTO users (nama, email, password, role, nis, nip, kelas) 
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
