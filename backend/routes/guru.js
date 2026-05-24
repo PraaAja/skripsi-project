@@ -154,35 +154,26 @@ if (kelas) {
 });
 
 router.get("/rekomendasi", (req, res) => {
-  const query = `
-    SELECT 
-      s.id,
-      u.nama,
-      s.jurusan,
-      s.confidence,
-      s.alasan
-    FROM siswa s
-    JOIN users u ON u.id = s.user_id
-    WHERE s.jurusan IS NOT NULL
-    ORDER BY s.id DESC
-  `;
+  db.query(
+    "SELECT id, nama FROM users WHERE TRIM(LOWER(role)) = 'siswa'",
+    (err, results) => {
+      if (err) {
+        console.error("ERROR:", err);
+        return res.status(500).json({ message: err.message });
+      }
 
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error("ERROR REKOMENDASI GURU:", err);
-      return res.status(500).json({ message: err.message });
+      // 🔥 dummy rekomendasi
+      const data = results.map((siswa) => ({
+        id: siswa.id,
+        nama: siswa.nama,
+        jurusan: "IPA",
+        confidence: 85,
+        alasan: "Nilai IPA lebih tinggi dari IPS",
+      }));
+
+      res.json(data);
     }
-
-    const data = results.map((row) => ({
-      id: row.id,
-      nama: row.nama,
-      jurusan: row.jurusan,
-      confidence: row.confidence,
-      alasan: row.alasan ? JSON.parse(row.alasan) : [],
-    }));
-
-    res.json(data);
-  });
+  );
 });
 
 // 🔥 PROSES OTOMATIS REKOMENDASI DENGAN ALGORITMA C4.5
