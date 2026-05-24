@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Award, TrendingUp, Search, Download, Eye } from 'lucide-react';
 import axios from 'axios';
+import * as XLSX from "xlsx";
 
 
 
@@ -84,7 +85,25 @@ const fetchStats = async () => {
     (item.jurusanRekomendasi || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  
+  const exportToExcel = () => {
+    if (!filteredData.length) return;
+
+    const dataExport = filteredData.map((r, i) => ({
+      No: i + 1,
+      Nama: r.nama,
+      Kelas: r.kelas,
+      "Jurusan Rekomendasi": r.jurusanRekomendasi || "-",
+      "Confidence (%)": r.confidence,
+      Status: r.status,
+      Tanggal: r.tanggal,
+    }));
+    
+    const worksheet = XLSX.utils.json_to_sheet(dataExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Hasil Rekomendasi");
+
+    XLSX.writeFile(workbook, "laporan_hasil_rekomendasi.xlsx");
+  };
 
    // 🔥 STATS BARU (SESUAI REQUEST LU)
 // ✅ PAKE DATA DARI BACKEND
@@ -118,7 +137,10 @@ const pending = stats.pending;
           <h1 className="text-3xl font-bold text-gray-900">Hasil Rekomendasi</h1>
           <p className="text-gray-500 mt-1">Prediksi jurusan untuk siswa berdasarkan Decision Tree C4.5</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+        <button 
+          onClick={exportToExcel}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+        >
           <Download className="w-4 h-4" />
           Export Laporan
         </button>
