@@ -88,19 +88,58 @@ const fetchStats = async () => {
   const exportToExcel = () => {
     if (!filteredData.length) return;
 
-    const dataExport = filteredData.map((r, i) => ({
-      No: i + 1,
-      Nama: r.nama,
-      Kelas: r.kelas,
-      "Jurusan Rekomendasi": r.jurusanRekomendasi || "-",
-      "Confidence (%)": r.confidence,
-      Status: r.status,
-      Tanggal: r.tanggal,
-    }));
-    
-    const worksheet = XLSX.utils.json_to_sheet(dataExport);
+    // Header info untuk Laporan Excel yang Premium
+    const today = new Date().toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    const aoaData = [
+      ["LAPORAN HASIL REKOMENDASI JURUSAN SISWA"],
+      ["SMAN 3 TUBAN"],
+      [`Tanggal Cetak: ${today}`],
+      [], // Baris kosong pembatas
+      ["No", "Nama Siswa", "Kelas", "Rekomendasi Jurusan", "Tingkat Keyakinan (%)", "Status Proses", "Tanggal Klasifikasi"]
+    ];
+
+    filteredData.forEach((r, i) => {
+      aoaData.push([
+        i + 1,
+        r.nama,
+        r.kelas,
+        r.jurusanRekomendasi || "-",
+        `${r.confidence}%`,
+        r.status || "-",
+        r.tanggal
+      ]);
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(aoaData);
+
+    // Merge Cell untuk Judul Laporan biar rapi
+    worksheet["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Merge baris ke-1
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Merge baris ke-2
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } }  // Merge baris ke-3
+    ];
+
+    // Lebar kolom dinamis agar teks tidak terpotong (Auto-fit)
+    const cols = [
+      { wch: 6 },  // No
+      { wch: 35 }, // Nama Siswa
+      { wch: 12 }, // Kelas
+      { wch: 25 }, // Rekomendasi Jurusan
+      { wch: 22 }, // Tingkat Keyakinan
+      { wch: 18 }, // Status Proses
+      { wch: 22 }  // Tanggal Klasifikasi
+    ];
+    worksheet["!cols"] = cols;
+
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Hasil Rekomendasi");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Rekomendasi");
 
     XLSX.writeFile(workbook, "laporan_hasil_rekomendasi.xlsx");
   };
